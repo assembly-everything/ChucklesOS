@@ -12,9 +12,9 @@ start:
     mov ss, ax
     mov sp, 0x7c00
 
-    ; Load second, third, and fourth sectors
+    ; Load all command handler sectors
     mov ah, 0x02    ; BIOS read sector function
-    mov al, 3       ; Number of sectors to read (3 sectors for all command sets)
+    mov al, 6       ; Number of sectors to read (6 sectors for all command sets)
     mov ch, 0       ; Cylinder 0
     mov cl, 2       ; Start from Sector 2
     mov dh, 0       ; Head 0
@@ -35,28 +35,28 @@ start:
 shell_loop:
     mov si, prompt
     call print_string
-    
+
     ; Get keyboard input
     mov di, input_buffer
     mov cx, 0       ; Character counter
-    
+
 input_loop:
     xor ax, ax
     int 0x16        ; Wait for keypress
-    
+
     cmp al, 0x0D    ; Check if Enter key
     je handle_enter
-    
+
     cmp al, 0x08    ; Check if Backspace
     je handle_backspace
-    
+
     cmp cx, 63      ; Check buffer limit
     je input_loop
-    
+
     ; Echo character and store it
     mov ah, 0x0E
     int 0x10
-    
+
     stosb           ; Store character in buffer
     inc cx
     jmp input_loop
@@ -68,32 +68,46 @@ handle_enter:
     int 0x10
     mov al, 0x0A
     int 0x10
-    
+
     ; Try first command set
     mov ax, input_buffer
     push ax
     call 0x7E00         ; Call first command handler
     add sp, 2
     jc shell_loop       ; If command was handled, continue
-    
+
     ; Try second command set if first one didn't handle it
     mov ax, input_buffer
     push ax
     call 0x8000         ; Call second command handler
     add sp, 2
     jc shell_loop       ; If command was handled, continue
-    
+
     ; Try third command set if second one didn't handle it
     mov ax, input_buffer
     push ax
     call 0x8200         ; Call third command handler
+    add sp, 2
+    jc shell_loop       ; If command was handled, continue
+
+    ; Try fourth command set if third one didn't handle it
+    mov ax, input_buffer
+    push ax
+    call 0x8400         ; Call fourth command handler
+    add sp, 2
+    jc shell_loop       ; If command was handled, continue
+
+    ; Try fifth command set if fourth one didn't handle it
+    mov ax, input_buffer
+    push ax
+    call 0x8600         ; Call fifth command handler
     add sp, 2
     jmp shell_loop      ; Continue regardless of result
 
 handle_backspace:
     cmp cx, 0           ; Check if buffer is empty
     je input_loop
-    
+
     dec di              ; Remove last character
     dec cx
     mov ah, 0x0E
@@ -121,8 +135,8 @@ done:
     ret
 
 ; Data section
-welcome_msg:    db "This is a test build of ChucklesOS-1.08", 0x0D, 0x0A
-                db "Build: 25222-1027", 0x0D, 0x0A
+welcome_msg:    db "chucklesOS 1.08 Beta 7", 0x0D, 0x0A
+                db "Build: B7", 0x0D, 0x0A
                 db "Ver: 1.08", 0x0D, 0x0A, 0
 prompt:         db "#>", 0
 disk_error_msg: db "Error loading command handler", 0x0D, 0x0A, 0
