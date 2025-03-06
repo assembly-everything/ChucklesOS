@@ -1,5 +1,5 @@
 ; ChucklesOS Command Handler
-; cmd1.s - First command set implementation
+; cmd1.s - First command set implementation with updated version information
 
 [org 0x7E00]      ; Second sector starts at 0x7E00
 [bits 16]
@@ -9,7 +9,7 @@ command_handler:
     push bp
     mov bp, sp
     mov si, [bp+4]  ; First parameter (buffer address)
-    
+
     ; Compare input with known commands
     mov di, cmd_help
     call strcmp
@@ -28,7 +28,7 @@ command_handler:
     ; If no match found, print error
     mov si, error_msg
     call print_string
-    
+
     pop bp
     ret
 
@@ -97,8 +97,10 @@ help_msg:    db "Available commands:", 0x0D, 0x0A
             db "  color   - Display color test", 0x0D, 0x0A
             db "  off     - Power off system", 0x0D, 0x0A
             db "  reboot  - Restart system", 0x0D, 0x0A
-            db "  pc-info - Show system information", 0x0D, 0x0A, 0
-ver_msg:     db "ChucklesOS 1.08", 0x0D, 0x0A, 0
+            db "  pc-info - Show system information", 0x0D, 0x0A
+            db "  rmem    - Read from RAM", 0x0D, 0x0A
+            db "  mwri    - Write to RAM", 0x0D, 0x0A, 0
+ver_msg:     db "chucklesOS 1.08 Beta 7", 0x0D, 0x0A, 0
 error_msg:   db "Unknown command", 0x0D, 0x0A, 0
 
 times 512-($-$$) db 0   ; Pad to 512 bytes
